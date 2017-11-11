@@ -1,5 +1,6 @@
 package seedu.address.ui;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -20,7 +21,7 @@ public class Autocompleter {
 
     private static final String PROMPT_USER_TO_USE_HELP_MESSAGE = "To see what commands are available, type 'help' "
             + "into the command box";
-    private static final String MULTIPLE_RESULT_MESSAGE = "Multiple matches found";
+    private static final String MULTIPLE_RESULT_MESSAGE = "Possible results";
     private static final String EMPTY_STRING = "";
     private static final String SPACE = " ";
 
@@ -70,6 +71,11 @@ public class Autocompleter {
         case COMMAND_CYCLE_PREFIX:
             clearResultsWindow();
             return textInCommandBox.substring(0, textInCommandBox.length() - 2)
+                    + possibleAutocompleteResults.get(cycleIndex());
+
+        case COMMAND_OPTIONS:
+            displayMultipleResults(possibleAutocompleteResults);
+            return textInCommandBox.split(" ")[0]  + SPACE
                     + possibleAutocompleteResults.get(cycleIndex());
 
         case COMMAND_COMPLETE_PREFIX:
@@ -142,6 +148,12 @@ public class Autocompleter {
             return;
         }
 
+        if (currentCommand.equals(AutocompleteCommand.IMPORT)) {
+            getPossibleFile(arguments);
+            state = AutocompleteState.COMMAND_OPTIONS;
+            return;
+        }
+
         if (isCyclingThroughCommands(commandWord)) {
             return;
         }
@@ -177,6 +189,16 @@ public class Autocompleter {
             state = AutocompleteState.COMMAND;
         }
 
+    }
+
+    private void getPossibleFile(String arguments) {
+        File importDirectory = new File("./data/import/");
+        File[] filesInDirectory = importDirectory.listFiles((d, name) -> name.endsWith(".xml"));
+        ArrayList<String> filesToList = new ArrayList<>();
+        Arrays.stream(filesInDirectory)
+                .map(f -> f.toString().substring(14))
+                .forEach(f -> filesToList.add(f));
+        possibleAutocompleteResults = filesToList;
     }
 
     private boolean isCyclingThroughCommands(String commandWord) {
